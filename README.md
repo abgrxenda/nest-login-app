@@ -75,9 +75,11 @@ cd nest-login-app
 
 ```bash
 npm install
-npm install @nestjs/passport passport passport-local passport-jwt jwt-simple
-npm install @nestjs/typeorm typeorm better-sqlite3
+npm install @nestjs/passport passport passport-local passport-jwt bcryptjs
+npm install @nestjs/typeorm typeorm pg
 npm install bcryptjs
+npm install --save-dev @types/bcryptjs
+npm install @nestjs/jwt jwt-simple
 ```
 
 3. Create `ormconfig.json`:
