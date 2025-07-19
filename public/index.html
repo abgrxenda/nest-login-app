@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script> -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mako&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding-top: 60px;
+    }
+    .container {
+      max-width: 500px;
+    }
+    .form-section {
+      margin-top: 20px;
+    }
+    body * {
+  font-family: "Mako", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="text-center mb-4">Login</h2>
+    <form id="loginForm" class="needs-validation" novalidate>
+      <div class="mb-3">
+        <label for="username" class="form-label mb-3">Username</label>
+        <input type="text" class="form-control mb-3" name="username" id="username" placeholder="Enter username" required>
+        <div class="invalid-feedback mb-3">Please enter a username.</div>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" name="password" id="password" placeholder="Enter password" required>
+        <div class="invalid-feedback">Please enter a password.</div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+
+    <div id="formSection" class="form-section" style="display: none;">
+      <h3 class="text-center mb-4">Submit Profile</h3>
+      <form id="profileForm" class="needs-validation" novalidate>
+        <div class="mb-3">
+          <label for="fullName" class="form-label">Full Name</label>
+          <input type="text" class="form-control" name="fullName" id="fullName" placeholder="John Doe" required>
+          <div class="invalid-feedback">Please enter your full name.</div>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" name="email" id="email" placeholder="you@example.com" required>
+          <div class="invalid-feedback">Please enter a valid email.</div>
+        </div>
+        <button type="submit" class="btn btn-success w-100">Save Profile</button>
+      </form>
+
+      <h4 class="mt-4">Saved Profiles</h4>
+      <ul id="profilesList" class="list-group"></ul>
+    </div>
+
+    <!-- Alert -->
+    <div id="output" class="mt-4"></div>
+  </div>
+
+  <!-- Bootstrap JS (Optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Your JavaScript -->
+  <script>
+    let token = null;
+
+    // Form validation
+    (() => {
+      'use strict'
+      const forms = document.querySelectorAll('.needs-validation')
+      Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+          if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+          form.classList.add('was-validated')
+        }, false)
+      })
+    })();
+
+    // Login Form Handler
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const body = Object.fromEntries(formData);
+
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (data.access_token) {
+        token = data.access_token;
+        document.getElementById('output').innerHTML = `
+          <div class="alert alert-success">✅ Logged in successfully!</div>`;
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('formSection').style.display = 'block';
+        loadProfiles();
+      } else {
+        document.getElementById('output').innerHTML = `
+          <div class="alert alert-danger">❌ Login failed. Check your credentials.</div>`;
+      }
+    });
+
+    // Profile Form Handler
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const body = Object.fromEntries(formData);
+
+      const res = await fetch('/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        document.getElementById('output').innerHTML = `
+          <div class="alert alert-success">✅ Profile saved!</div>`;
+        document.getElementById('profileForm').reset();
+        loadProfiles();
+      } else {
+        document.getElementById('output').innerHTML = `
+          <div class="alert alert-danger">❌ Failed to save profile.</div>`;
+      }
+    });
+
+    // Load Profiles
+    async function loadProfiles() {
+      const res = await fetch('/profile', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        },
+      });
+
+      if (res.ok) {
+        const profiles = await res.json();
+        const list = document.getElementById('profilesList');
+        list.innerHTML = '';
+        profiles.forEach(p => {
+          const li = document.createElement('li');
+          li.className = 'list-group-item';
+          li.textContent = `${p.fullName} - ${p.email}`;
+          list.appendChild(li);
+        });
+      } else {
+        document.getElementById('profilesList').innerHTML = `
+          <li class="list-group-item text-danger">⚠️ Failed to load profiles</li>`;
+      }
+    }
+  </script>
+</body>
+</html>
