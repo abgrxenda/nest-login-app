@@ -1,6 +1,7 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Param, UseGuards, Body } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
+import { User } from './user.entity'; // Import the User entity
 
 @Controller('users')
 export class UsersController {
@@ -10,5 +11,13 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Put(':username')
+  async update(
+    @Param('username') username: string,
+    @Body() userData: Partial<User>,
+  ) {
+    return this.usersService.update(username, userData);
   }
 }

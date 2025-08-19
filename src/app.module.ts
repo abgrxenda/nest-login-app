@@ -8,10 +8,10 @@ import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      // Serve from project root's `public` folder
-      rootPath: join(process.cwd(), 'public'),
-    }),
+    // ServeStaticModule.forRoot({
+    //   // Serve from project root's `public` folder
+    //   rootPath: join(process.cwd(), 'public'),
+    // }),
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'nest_db.sqlite',
